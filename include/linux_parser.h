@@ -29,16 +29,16 @@ std::string Kernel();
 
 // CPU
 enum CPUStates {
-  kUser_ = 0,
-  kNice_,
-  kSystem_,
-  kIdle_,
-  kIOwait_,
-  kIRQ_,
-  kSoftIRQ_,
-  kSteal_,
-  kGuest_,
-  kGuestNice_
+  kUser_ = 0, // normal process executing in user mode
+  kNice_, // niced process executing in user mode
+  kSystem_, // processes executing in user mode
+  kIdle_, // twiddling thumbs
+  kIOwait_, // waiting fir i/o to complete
+  kIRQ_,  // servicing interrupts
+  kSoftIRQ_,  // servicing softirqs
+  kSteal_,  // involuntary wait
+  kGuest_,  // running a normal guest
+  kGuestNice_   // running a niced guest
 };
 std::vector<std::string> CpuUtilization();
 long Jiffies();
