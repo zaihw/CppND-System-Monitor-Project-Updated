@@ -17,16 +17,19 @@ using std::size_t;
 using std::string;
 using std::vector;
 
-// TODO: Return the system's CPU
+// REVIEW: Return the system's CPU
+// cpu_ getter func
 Processor& System::Cpu() { return cpu_; }
 
-// TODO: Return a container composed of the system's processes
+// TODO: Return a container composed of the system's processes on sorted order
+// processes_ getter func, return sorted vector of Processes(pid)
 vector<Process>& System::Processes() {
   vector<int> pids = LinuxParser::Pids();
-  vector<Process> processes_ = {};
+  processes_.clear();
   for (auto pid : pids) {
     processes_.push_back(Process(pid));
   }
+  std::sort(processes_.begin(), processes_.end());
   return processes_;
 }
 

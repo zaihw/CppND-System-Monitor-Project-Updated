@@ -15,7 +15,7 @@ using std::to_string;
 using std::vector;
 
 // constructor
-Process::Process(int pid): pid_(pid){}
+Process::Process(int pid) { Process::pid_ = pid; }
 
 // REVIEW: Return this process's ID
 int Process::Pid() { return pid_; }
@@ -26,8 +26,8 @@ float Process::CpuUtilization() {
   int hertz = sysconf(_SC_CLK_TCK);
   long starttime = LinuxParser::UpTime(pid_);
   long totaltime = LinuxParser::ActiveJiffies(pid_);
-  long CpuUtilization;
-  CpuUtilization = 100 * ((totaltime / hertz) / (uptime - (starttime / hertz)));
+  long CpuUtilization = 0;
+  CpuUtilization = ((totaltime / hertz) / (uptime - (starttime / hertz)));
   return (float)CpuUtilization;
 }
 

@@ -76,8 +76,8 @@ vector<int> LinuxParser::Pids() {
 
 // REVIEW: Read and return the system memory utilization
 float LinuxParser::MemoryUtilization() {
-  float MemTotal, MemFree, MemBuffers;
-  float MemoryUtilization;
+  float MemTotal = 0.0, MemFree = 0.0, MemBuffers = 0.0;
+  float MemoryUtilization = 0.0;
   string name, value, unit;
   string line;
   std::ifstream filestream(kProcDirectory + kMeminfoFilename);
@@ -110,9 +110,10 @@ long LinuxParser::UpTime() {
     std::istringstream linestream(line);  // get string stream of each line and
                                           // " " as delimiter to get each token
     linestream >> UpTime >> IdleTime;
+    return stol(UpTime);
   }
   stream.close();
-  return stol(UpTime);
+  return 0;
 }
 
 // REVIEW: Read and return CPU utilization
@@ -127,19 +128,19 @@ vector<string> LinuxParser::CpuUtilization() {
     // only read the first row
     std::getline(filestream, line);
     std::istringstream linestream(line);
-    while (linestream >> key >> user >> nice >> system >> idle >> iowait >>
-           irq >> softirq >> steal >> guest >> guest_nice) {
-      CpuUtilization.push_back(user);
-      CpuUtilization.push_back(nice);
-      CpuUtilization.push_back(system);
-      CpuUtilization.push_back(idle);
-      CpuUtilization.push_back(iowait);
-      CpuUtilization.push_back(irq);
-      CpuUtilization.push_back(softirq);
-      CpuUtilization.push_back(steal);
-      CpuUtilization.push_back(guest);
-      CpuUtilization.push_back(guest_nice);
-    }
+    linestream >> key >> user >> nice >> system >> idle >> iowait >> irq >>
+        softirq >> steal >> guest >> guest_nice;
+    CpuUtilization.push_back(user);
+    CpuUtilization.push_back(nice);
+    CpuUtilization.push_back(system);
+    CpuUtilization.push_back(idle);
+    CpuUtilization.push_back(iowait);
+    CpuUtilization.push_back(irq);
+    CpuUtilization.push_back(softirq);
+    CpuUtilization.push_back(steal);
+    CpuUtilization.push_back(guest);
+    CpuUtilization.push_back(guest_nice);
+
     return CpuUtilization;
   }
   filestream.close();
@@ -171,7 +172,7 @@ long LinuxParser::IdleJiffies() {
 // REVIEW: Read and return the total number of active jiffies for the system
 // extract the activa values from LinusParser::CpuUtilization()
 long LinuxParser::ActiveJiffies() {
-  long ActiveJiffies;
+  long ActiveJiffies = 0;
   ActiveJiffies = LinuxParser::Jiffies() - LinuxParser::IdleJiffies();
   return ActiveJiffies;
 }
@@ -205,7 +206,7 @@ int LinuxParser::TotalProcesses() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       linestream >> key >> value;
-      if (key == "processes") {
+      if (key == "processes" && value != "") {
         TotalProcesses = stoi(value);
         return TotalProcesses;
       }
@@ -224,7 +225,7 @@ int LinuxParser::RunningProcesses() {
     while (std::getline(filestream, line)) {
       std::istringstream linestream(line);
       linestream >> key >> value;
-      if (key == "procs_running") {
+      if (key == "procs_running" && value != "") {
         RunningProcesses = stoi(value);
         return RunningProcesses;
       }
