@@ -30,11 +30,13 @@ string LinuxParser::OperatingSystem() {
       while (linestream >> key >> value) {
         if (key == "PRETTY_NAME") {
           std::replace(value.begin(), value.end(), '_', ' ');
+          filestream.close();
           return value;
         }
       }
     }
   }
+  filestream.close();
   return value;
 }
 
@@ -50,6 +52,7 @@ string LinuxParser::Kernel() {
     linestream >> os >> version >>
         kernel;  // store the 3rd token in string kernal
   }
+  stream.close();
   return kernel;
 }
 
@@ -144,6 +147,7 @@ vector<string> LinuxParser::CpuUtilization() {
     return CpuUtilization;
   }
   filestream.close();
+  return CpuUtilization;
 }
 
 // REVIEW: Read and return the total number of jiffies for the system
@@ -181,17 +185,18 @@ long LinuxParser::ActiveJiffies() {
 long LinuxParser::ActiveJiffies(int pid) {
   long ActiveJiffies = 0;
   string value, line;
+  vector<string> info{};
   std::ifstream filestream(kProcDirectory + to_string(pid) + kStatFilename);
   if (filestream.is_open()) {
     std::getline(filestream, line);
     std::istringstream linestream(line);
-    int i = 0;
-    while (linestream >> value) {
-      if (i > 12 && i < 17) {
-        ActiveJiffies += stol(value);
-      }
-      i++;
+    
+    for(int i = 0 ; i < 22 ; i++){
+      linestream >> value;
+      info.push_back(value);
     }
+    ActiveJiffies = stol(info[13]) + stol(info[14]) + stol(info[15]) + stol(info[16]);
+    
   }
   filestream.close();
   return ActiveJiffies;
@@ -257,7 +262,7 @@ string LinuxParser::Ram(int pid) {
       std::istringstream linestream(line);
       linestream >> key >> value;
       if (key == "VmSize:") {
-        Ram = to_string(stoi(value) / 1000);
+        Ram = to_string(stoi(value) / 1024);
         return Ram;
       }
     }
@@ -291,13 +296,15 @@ string LinuxParser::User(int pid) {
   string User;
   std::ifstream filestream(kPasswordPath);
   if (filestream.is_open()) {
-    std::getline(filestream, line);
-    std::replace(line.begin(), line.end(), ':', ' ');  // convert ':' to ' '
-    std::istringstream linestream(line);
-    linestream >> key >> x >> value;
-    if (value == LinuxParser::Uid(pid)) {
-      User = key;
-      return User;
+    while (std::getline(filestream, line)) {
+      std::replace(line.begin(), line.end(), ':', ' ');  // convert ':' to ' '
+      std::istringstream linestream(line);
+      linestream >> key >> x >> value;
+      if (value == LinuxParser::Uid(pid)) {
+        User = key;
+        filestream.close();
+        return User;
+      }
     }
   }
   filestream.close();
@@ -305,6 +312,7 @@ string LinuxParser::User(int pid) {
 }
 
 // REVIEW: Read and return the uptime of a process in seconds
+// total system uptime - time when process starts
 long LinuxParser::UpTime(int pid) {
   string value, line;
   long UpTime;
@@ -315,7 +323,8 @@ long LinuxParser::UpTime(int pid) {
     int i = 0;
     while (linestream >> value) {
       if (i == 21) {
-        UpTime = stol(value) / sysconf(_SC_CLK_TCK);
+        UpTime = LinuxParser::UpTime() - stol(value) / sysconf(_SC_CLK_TCK);
+        filestream.close();
         return UpTime;
       }
       i++;
@@ -324,3 +333,4 @@ long LinuxParser::UpTime(int pid) {
   filestream.close();
   return 0;
 }
+
